@@ -156,10 +156,13 @@ async function runAction(client: ToolClient, action: PendingAction): Promise<Too
         for: 'tui-idle',
         timeoutMs: TUI_IDLE_TIMEOUT_MS
       })
-      const receipt = unwrap<Record<string, unknown>>(
+      // Why: the runtime wraps the receipt as `{ send: RuntimeTerminalSend }`; a missing
+      // `send` block (older hosts) counts as accepted, matching the app's own review-send path.
+      const envelope = unwrap<{ send?: { accepted?: boolean; refusedReason?: string } }>(
         await client.sendRequest('terminal.send', { terminal: handle, text, enter })
       )
-      const accepted = receipt && (receipt as { accepted?: unknown }).accepted !== false
+      const receipt = envelope.send ?? { accepted: true }
+      const accepted = receipt.accepted !== false
       return {
         status: accepted ? 'sent' : 'rejected',
         receipt,

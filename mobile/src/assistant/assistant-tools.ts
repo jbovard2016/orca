@@ -46,6 +46,15 @@ export async function listAgents(client: ToolClient): Promise<ToolResult> {
   return { sessions, count: sessions.length }
 }
 
+type TerminalReadResult = {
+  status?: string
+  tail?: string[]
+  oldestCursor?: string
+  nextCursor?: string | null
+  limited?: boolean
+  source?: string
+}
+
 export async function readAgent(
   client: ToolClient,
   args: { target: string; terminal?: string; mode?: 'screen' | 'history'; cursor?: string }
@@ -67,14 +76,11 @@ export async function readAgent(
           ...(cursor === null ? {} : { cursor })
         }
       : { terminal: terminal.handle, screen: true }
-  const read = unwrap<{
-    status?: string
-    tail?: string[]
-    oldestCursor?: string
-    nextCursor?: string | null
-    limited?: boolean
-    source?: string
-  }>(await client.sendRequest('terminal.read', params))
+  // Why: the runtime wraps the read as `{ terminal: RuntimeTerminalRead }`.
+  const envelope = unwrap<{ terminal?: TerminalReadResult }>(
+    await client.sendRequest('terminal.read', params)
+  )
+  const read: TerminalReadResult = envelope.terminal ?? {}
   const { text, truncated } = spokenTrim((read.tail ?? []).join('\n'))
   const agent = (worktree.agents ?? []).find((a) => a.lastAssistantMessage)
   return {

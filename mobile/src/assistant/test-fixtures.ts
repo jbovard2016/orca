@@ -30,11 +30,13 @@ export function fakeClient(state: {
         case 'repo.list':
           return ok({ repos: state.repos ?? [] })
         case 'terminal.read':
-          return ok(state.read ?? { status: 'running', tail: ['hello'], nextCursor: null })
+          return ok({
+            terminal: state.read ?? { status: 'running', tail: ['hello'], nextCursor: null }
+          })
         case 'terminal.wait':
           return ok({ wait: { condition: 'tui-idle', satisfied: true } })
         case 'terminal.send':
-          return ok(state.sendReceipt ?? { accepted: true })
+          return ok({ send: state.sendReceipt ?? { accepted: true } })
         case 'worktree.activate':
           return ok({ activated: true })
         case 'terminal.focus':
