@@ -54,6 +54,15 @@ export function classifyApprovalUtterance(text: string): ApprovalVerdict {
   return 'unclear'
 }
 
+function sameTarget(a: FrozenTarget, b: FrozenTarget): boolean {
+  return (
+    a.worktreeId === b.worktreeId &&
+    a.terminalHandle === b.terminalHandle &&
+    a.incarnationId === b.incarnationId &&
+    a.agentIdentity === b.agentIdentity
+  )
+}
+
 export type PendingActionGateOptions = {
   now?: () => number
   makeId?: () => string
@@ -71,13 +80,30 @@ export class PendingActionGate {
       (() => `act-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`)
   }
 
-  /** Replaces any earlier pending action: one thing awaits approval at a time. */
+  /**
+   * Replaces any earlier pending action: one thing awaits approval at a time.
+   * Exception: if the same kind, target and args are already approved but not
+   * yet executed (the model re-called the tool after hearing "yes"), return the
+   * approved action instead of starting a new read-back loop.
+   */
   create<TArgs>(input: {
     kind: PendingActionKind
     args: TArgs
     target: FrozenTarget
     readBack: string
   }): PendingAction<TArgs> {
+    const existing = this.current()
+    if (
+      existing &&
+      existing.approvedAt &&
+      !existing.consumedAt &&
+      !existing.invalidatedReason &&
+      existing.kind === input.kind &&
+      sameTarget(existing.target, input.target) &&
+      JSON.stringify(existing.args) === JSON.stringify(input.args)
+    ) {
+      return existing as PendingAction<TArgs>
+    }
     const action: PendingAction<TArgs> = {
       id: this.makeId(),
       kind: input.kind,
