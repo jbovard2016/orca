@@ -144,6 +144,15 @@ export default function SettingsScreen() {
           <View style={styles.separator} />
           <Pressable
             style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
+            onPress={() => router.push('/assistant')}
+          >
+            <Mic size={16} color={colors.textSecondary} />
+            <Text style={styles.rowLabel}>Assistant</Text>
+            <ChevronRight size={16} color={colors.textMuted} />
+          </Pressable>
+          <View style={styles.separator} />
+          <Pressable
+            style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
             onPress={() => router.push('/notifications')}
           >
             <Bell size={16} color={colors.textSecondary} />
