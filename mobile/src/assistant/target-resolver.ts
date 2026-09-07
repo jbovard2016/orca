@@ -122,15 +122,16 @@ export function resolveTerminal(
     const scored = inWorktree
       .map((t) => ({ t, score: scoreAgainst(spokenTitle, [t.title]) }))
       .filter((x) => x.score > 0)
-    if (scored.length === 0) {
-      return { kind: 'none' }
+    // Why: the model sometimes invents a title (e.g. the repo name); an unmatched
+    // title falls through to the agent-terminal rule instead of failing outright.
+    if (scored.length > 0) {
+      const top = Math.max(...scored.map((x) => x.score))
+      const winners = scored.filter((x) => x.score === top)
+      if (winners.length === 1) {
+        return { kind: 'match', terminal: winners[0].t }
+      }
+      return { kind: 'ambiguous', candidates: winners.map((x) => x.t.title) }
     }
-    const top = Math.max(...scored.map((x) => x.score))
-    const winners = scored.filter((x) => x.score === top)
-    if (winners.length === 1) {
-      return { kind: 'match', terminal: winners[0].t }
-    }
-    return { kind: 'ambiguous', candidates: winners.map((x) => x.t.title) }
   }
   const agentTerminals = inWorktree.filter((t) => Boolean(t.agentIdentity))
   if (agentTerminals.length === 1) {

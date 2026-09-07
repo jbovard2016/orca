@@ -90,6 +90,13 @@ describe('resolveTerminal', () => {
     const r = resolveTerminal(terms, 'c', 'terminal 1')
     expect(r.kind === 'match' && r.terminal.handle).toBe('t2')
   })
+  it('falls back to the single agent terminal when the spoken title matches nothing', () => {
+    const r = resolveTerminal(terms, 'c', 'jbovard2016/codex-sinns')
+    expect(r.kind === 'match' && r.terminal.handle).toBe('t1')
+  })
+  it('an unmatched title with two agent terminals is still ambiguous', () => {
+    expect(resolveTerminal(terms, 'a', 'nonsense').kind).toBe('ambiguous')
+  })
   it('returns none for an unknown worktree', () => {
     expect(resolveTerminal(terms, 'zzz').kind).toBe('none')
   })
