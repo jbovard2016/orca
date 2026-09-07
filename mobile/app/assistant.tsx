@@ -51,6 +51,7 @@ export default function AssistantScreen(): React.JSX.Element {
   const [hasToken, setHasToken] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [typed, setTyped] = useState('')
   useEffect(() => {
     void loadAssistantSettings().then((s) => {
       setHandsFree(s.handsFree)
@@ -160,6 +161,32 @@ export default function AssistantScreen(): React.JSX.Element {
           </Text>
         ))}
       </ScrollView>
+
+      {active ? (
+        <View style={styles.typedRow}>
+          <TextInput
+            style={[styles.input, styles.typedInput]}
+            value={typed}
+            onChangeText={setTyped}
+            placeholder="Type instead of speaking"
+            placeholderTextColor={colors.textMuted}
+            onSubmitEditing={() => {
+              session.sendText(typed)
+              setTyped('')
+            }}
+            returnKeyType="send"
+          />
+          <Pressable
+            style={styles.typedSend}
+            onPress={() => {
+              session.sendText(typed)
+              setTyped('')
+            }}
+          >
+            <Text style={styles.primaryButtonText}>Send</Text>
+          </Pressable>
+        </View>
+      ) : null}
 
       {session.awaitingConfirmation ? (
         <Pressable style={styles.confirmButton} onPress={() => void session.approveByTap()}>
@@ -295,5 +322,13 @@ const styles = StyleSheet.create({
     fontSize: typography.bodySize
   },
   disabled: { opacity: 0.5 },
-  errorText: { color: colors.statusRed, fontSize: typography.metaSize }
+  errorText: { color: colors.statusRed, fontSize: typography.metaSize },
+  typedRow: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm },
+  typedInput: { flex: 1 },
+  typedSend: {
+    backgroundColor: colors.bgRaised,
+    borderRadius: radii.button,
+    paddingHorizontal: spacing.md,
+    justifyContent: 'center'
+  }
 })

@@ -288,3 +288,18 @@ describe('RealtimeController', () => {
     expect(t.controller.gate.current()).toBeNull()
   })
 })
+
+describe('typed turns', () => {
+  it('sendText injects a user message and requests a response', async () => {
+    const t = setup()
+    const s = await t.ready()
+    t.controller.sendText('what is running?')
+    const msg = s.frames().findLast((f) => f.type === 'conversation.item.create') as {
+      item: { type: string; role: string; content: Array<{ text: string }> }
+    }
+    expect(msg.item.role).toBe('user')
+    expect(msg.item.content[0].text).toBe('what is running?')
+    expect(s.types().at(-1)).toBe('response.create')
+    expect(t.transcript).toContain('user: what is running?')
+  })
+})

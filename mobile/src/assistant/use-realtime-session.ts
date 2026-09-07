@@ -38,6 +38,7 @@ export type UseRealtimeSessionResult = {
   start: () => Promise<void>
   stop: () => void
   approveByTap: () => Promise<void>
+  sendText: (text: string) => void
   /** Push-to-talk: call on press-out. Hands-free mode ignores it. */
   endUtterance: () => void
   awaitingConfirmation: boolean
@@ -147,6 +148,10 @@ export function useRealtimeSession(options: UseRealtimeSessionOptions): UseRealt
     await controllerRef.current?.approveByTap()
   }, [])
 
+  const sendText = useCallback((text: string) => {
+    controllerRef.current?.sendText(text)
+  }, [])
+
   const endUtterance = useCallback(() => {
     controllerRef.current?.endUtterance()
   }, [])
@@ -158,6 +163,7 @@ export function useRealtimeSession(options: UseRealtimeSessionOptions): UseRealt
     start,
     stop,
     approveByTap,
+    sendText,
     endUtterance,
     awaitingConfirmation: state === 'awaiting_confirmation'
   }

@@ -184,6 +184,18 @@ export class RealtimeController {
     this.send(responseCreate())
   }
 
+  /** A typed turn: useful when you cannot speak, and for scripted checks. */
+  sendText(text: string): void {
+    const trimmed = text.trim()
+    if (!trimmed || !this.socket) {
+      return
+    }
+    this.note('user', trimmed)
+    this.send(userNote(trimmed))
+    this.send(responseCreate())
+    this.touchIdle()
+  }
+
   /** Tap-to-confirm from the screen. */
   async approveByTap(): Promise<void> {
     if (this.gate.approveByTap()) {
