@@ -50,6 +50,7 @@ export default function AssistantScreen(): React.JSX.Element {
   const [tokenDraft, setTokenDraft] = useState('')
   const [hasToken, setHasToken] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
   useEffect(() => {
     void loadAssistantSettings().then((s) => {
       setHandsFree(s.handsFree)
@@ -63,14 +64,22 @@ export default function AssistantScreen(): React.JSX.Element {
   const active = session.state !== 'idle' && session.state !== 'closed' && session.state !== 'error'
 
   const saveSettings = useCallback(async () => {
-    await saveAssistantMintUrl(mintUrl)
-    await saveAssistantHandsFree(handsFree)
-    if (tokenDraft.trim()) {
-      await writeAssistantMintToken(tokenDraft)
-      setTokenDraft('')
-      setHasToken(true)
+    setSaveError(null)
+    try {
+      await saveAssistantMintUrl(mintUrl)
+      await saveAssistantHandsFree(handsFree)
+      if (tokenDraft.trim()) {
+        await writeAssistantMintToken(tokenDraft)
+        setTokenDraft('')
+        setHasToken(true)
+      }
+      setShowSettings(false)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      // eslint-disable-next-line no-console
+      console.warn('[assistant] save failed', message)
+      setSaveError(message)
     }
-    setShowSettings(false)
   }, [handsFree, mintUrl, tokenDraft])
 
   return (
@@ -123,6 +132,7 @@ export default function AssistantScreen(): React.JSX.Element {
           <Pressable style={styles.primaryButton} onPress={() => void saveSettings()}>
             <Text style={styles.primaryButtonText}>Save</Text>
           </Pressable>
+          {saveError ? <Text style={styles.errorText}>{saveError}</Text> : null}
         </View>
       ) : null}
 
@@ -284,5 +294,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontSize: typography.bodySize
   },
-  disabled: { opacity: 0.5 }
+  disabled: { opacity: 0.5 },
+  errorText: { color: colors.statusRed, fontSize: typography.metaSize }
 })
