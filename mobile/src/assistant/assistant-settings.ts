@@ -14,7 +14,8 @@ const SECURE_OPTIONS: SecureStore.SecureStoreOptions = {
 
 const MINT_URL_KEY = 'orca:assistantMintUrl'
 const HANDS_FREE_KEY = 'orca:assistantHandsFree'
-const MINT_TOKEN_KEY = 'orca:assistantMintToken'
+// Why: SecureStore keys allow only alphanumerics, '.', '-' and '_' (no ':').
+const MINT_TOKEN_KEY = 'orca.assistantMintToken'
 
 export type AssistantSettings = {
   mintUrl: string
